@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">真太阳时</string>
+    <string name="widget_label">真太阳时</string>
+    <string name="widget_desc">实时显示当地真太阳时，按秒刷新</string>
+</resources>

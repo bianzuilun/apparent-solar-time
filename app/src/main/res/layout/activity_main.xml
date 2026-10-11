@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="@color/textPrimary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Apparent Solar Time · 按太阳实际位置计时"
+            android:textColor="@color/textDim"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:fontFeatureSettings="tnum"
+            android:textColor="@color/amber"
+            android:textSize="58sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvOffset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/textPrimary"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/card_bg"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout style="@style/InfoRow">
+                <TextView style="@style/InfoLabel" android:text="均时差" />
+                <TextView
+                    android:id="@+id/tvEq"
+                    style="@style/InfoValue" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoRow">
+                <TextView style="@style/InfoLabel" android:text="经度修正" />
+                <TextView
+                    android:id="@+id/tvLon"
+                    style="@style/InfoValue" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoRow">
+                <TextView style="@style/InfoLabel" android:text="时区" />
+                <TextView
+                    android:id="@+id/tvZone"
+                    style="@style/InfoValue" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoRow">
+                <TextView style="@style/InfoLabel" android:text="定位" />
+                <TextView
+                    android:id="@+id/tvLoc"
+                    style="@style/InfoValue" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnLocate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="获取定位" />
+
+            <Button
+                android:id="@+id/btnManual"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="手动设置经纬度" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnExact"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="授予「精确闹钟」权限（保证整点与午夜精准校准）"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:lineSpacingExtra="4dp"
+            android:text="添加桌面小组件：长按桌面空白处 → 小组件 → 找到「真太阳时」拖到桌面，即可按秒实时刷新。\n\n真太阳时 = 设备标准时间 + 均时差 + 经度修正。均时差由地球椭圆轨道与地轴倾斜造成，一年中在 -14 ~ +16 分钟间变化；经度修正是你所在经度相对时区中央经线的偏移。\n\n算法：Meeus 天文算法，精度优于 ±1 秒。定位：GPS/网络定位，10 米误差仅对应 0.002 秒。"
+            android:textColor="@color/textDim"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>
