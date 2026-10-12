@@ -119,5 +119,11 @@
             android:text="添加桌面小组件：长按桌面空白处 → 小组件 → 找到「真太阳时」拖到桌面，即可按秒实时刷新。\n\n真太阳时 = 设备标准时间 + 均时差 + 经度修正。均时差由地球椭圆轨道与地轴倾斜造成，一年中在 -14 ~ +16 分钟间变化；经度修正是你所在经度相对时区中央经线的偏移。\n\n算法：Meeus 天文算法，精度优于 ±1 秒。定位：GPS/网络定位，10 米误差仅对应 0.002 秒。"
             android:textColor="@color/textDim"
             android:textSize="12sp" />
+        <Button
+            android:id="@+id/btnAbout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/about_button" />
     </LinearLayout>
 </ScrollView>

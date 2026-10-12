@@ -5,6 +5,8 @@ import android.app.Activity
 import android.app.AlarmManager
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -56,6 +58,7 @@ class MainActivity : Activity() {
 
         findViewById<Button>(R.id.btnLocate).setOnClickListener { ensurePermissionThenLocate() }
         findViewById<Button>(R.id.btnManual).setOnClickListener { showManualDialog() }
+        findViewById<Button>(R.id.btnAbout).setOnClickListener { showAboutDialog() }
         btnExact.setOnClickListener {
             startActivity(
                 Intent(
@@ -194,6 +197,28 @@ class MainActivity : Activity() {
                 }
             }
             .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun showAboutDialog() {
+        val github = getString(R.string.about_github)
+        val douyin = getString(R.string.about_douyin)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.about_title)
+            .setItems(arrayOf(
+                getString(R.string.about_github_row, github),
+                getString(R.string.about_douyin_row, douyin),
+            )) { _, which ->
+                val label = if (which == 0) "GitHub" else "抖音号"
+                val value = if (which == 0) github else douyin
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText(label, value))
+                // Android 13+ displays its own clipboard confirmation.
+                if (android.os.Build.VERSION.SDK_INT < 33) {
+                    Toast.makeText(this, getString(R.string.about_copied, label), Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(R.string.about_close, null)
             .show()
     }
 
