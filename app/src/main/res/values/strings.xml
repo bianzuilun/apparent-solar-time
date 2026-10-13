@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">真太阳时</string>
     <string name="widget_label">真太阳时</string>
+    <string name="widget_label_vivo">真太阳时 · 原子组件</string>
+    <string name="widget_label_xiaomi">真太阳时 · 小米组件</string>
     <string name="widget_desc">实时显示当地真太阳时，按秒刷新</string>
     <string name="about_title">关于 · 真太阳时</string>
     <string name="about_button">关于</string>

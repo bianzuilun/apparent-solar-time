@@ -30,6 +30,15 @@ object SolarTime {
     /** ΔT ≈ TT − UTC（2020 年代约 69 秒）。偏差 10 秒对结果影响 < 0.1 秒，无需逐年修正。 */
     private const val DELTA_T_SECONDS = 69.0
 
+    /** 真太阳时对应的时辰；子时跨午夜（23:00 至次日 01:00）。 */
+    fun shichenLabel(apparentSolarMillisOfDay: Long): String {
+        val dayMillis = 86_400_000L
+        val normalized = (apparentSolarMillisOfDay % dayMillis + dayMillis) % dayMillis
+        val hour = normalized / 3_600_000L
+        val branch = ((hour + 1) / 2 % 12).toInt()
+        return "子丑寅卯辰巳午未申酉戌亥"[branch] + "时"
+    }
+
     /**
      * 某一时刻真太阳时的完整快照。
      */

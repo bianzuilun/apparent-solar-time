@@ -15,6 +15,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.text.InputType
 import android.view.View
+import android.view.WindowInsets
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -31,6 +32,7 @@ class MainActivity : Activity() {
     private val engine by lazy { LocationEngine(applicationContext) }
 
     private lateinit var tvClock: TextView
+    private lateinit var tvShichen: TextView
     private lateinit var tvOffset: TextView
     private lateinit var tvEq: TextView
     private lateinit var tvLon: TextView
@@ -47,8 +49,22 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        OemWidgetProviders.configure(this)
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            window.setDecorFitsSystemWindows(false)
+        }
         setContentView(R.layout.activity_main)
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            findViewById<View>(R.id.mainScroll).setOnApplyWindowInsetsListener { view, insets ->
+                val safeArea = insets.getInsets(
+                    WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+                )
+                view.setPadding(safeArea.left, safeArea.top, safeArea.right, safeArea.bottom)
+                insets
+            }
+        }
         tvClock = findViewById(R.id.tvClock)
+        tvShichen = findViewById(R.id.tvShichen)
         tvOffset = findViewById(R.id.tvOffset)
         tvEq = findViewById(R.id.tvEq)
         tvLon = findViewById(R.id.tvLon)
@@ -71,6 +87,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        SolarWidget.updateAll(applicationContext)
         engine.startContinuous(object : LocationEngine.Callback {
             override fun onLocation(location: LocationStore.SavedLocation) {
                 SolarWidget.updateAll(applicationContext)
@@ -94,6 +111,7 @@ class MainActivity : Activity() {
         val snap = SolarTime.snapshot(now, longitude, zoneOffset)
 
         tvClock.text = hms(snap.apparentSolarMillisOfDay)
+        tvShichen.text = SolarTime.shichenLabel(snap.apparentSolarMillisOfDay)
         tvOffset.text = "真太阳时较设备时间 " + SolarWidget.signedHms(snap.offsetFromStandardSeconds)
         tvEq.text = SolarWidget.hm(snap.equationOfTimeSeconds)
         tvLon.text = SolarWidget.hm(snap.longitudeCorrectionSeconds)

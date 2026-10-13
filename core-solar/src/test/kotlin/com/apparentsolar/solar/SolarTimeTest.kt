@@ -15,6 +15,25 @@ class SolarTimeTest {
     private fun epochMs(iso: String): Long = Instant.parse(iso).toEpochMilli()
 
     @Test
+    fun shichen_allTwelvePeriodsAndTheirBoundaries() {
+        val labels = listOf("丑时", "寅时", "卯时", "辰时", "巳时", "午时",
+            "未时", "申时", "酉时", "戌时", "亥时", "子时")
+        labels.forEachIndexed { index, label ->
+            val start = (1 + index * 2) * 3_600_000L
+            assertEquals(labels[(index + 11) % 12], SolarTime.shichenLabel(start - 1))
+            assertEquals(label, SolarTime.shichenLabel(start))
+            assertEquals(label, SolarTime.shichenLabel(start + 7_200_000L - 1))
+        }
+    }
+
+    @Test
+    fun shichen_ziPeriodContinuesAcrossMidnight() {
+        for (millis in listOf(0L, 3_599_999L, 82_800_000L, 86_399_999L, 86_400_000L)) {
+            assertEquals("子时", SolarTime.shichenLabel(millis))
+        }
+    }
+
+    @Test
     fun equationOfTime_februaryMinimum() {
         val eot = SolarTime.equationOfTimeSeconds(SolarTime.julianDay(epochMs("2026-02-11T12:00:00Z")))
         assertEquals(-14.2 * 60, eot, 90.0)

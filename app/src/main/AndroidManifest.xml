@@ -13,6 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Solar">
 
+        <!-- Xiaomi's reviewed widget catalogue reads the version from the application. -->
+        <meta-data android:name="miuiWidgetVersion" android:value="2" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -32,6 +35,39 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".VivoSolarWidgetProvider"
+            android:enabled="false"
+            android:exported="false"
+            android:label="@string/widget_label_vivo">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_vivo" />
+            <meta-data android:name="vivo_widget" android:value="true" />
+            <meta-data android:name="vivoWidgetVersion" android:value="2" />
+            <meta-data
+                android:name="vivo.widget.description"
+                android:resource="@string/widget_desc" />
+        </receiver>
+
+        <receiver
+            android:name=".XiaomiSolarWidgetProvider"
+            android:enabled="false"
+            android:exported="false"
+            android:label="@string/widget_label_xiaomi"
+            android:process=":widgetProvider">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_xiaomi" />
+            <meta-data android:name="miuiWidget" android:value="true" />
         </receiver>
 
         <receiver

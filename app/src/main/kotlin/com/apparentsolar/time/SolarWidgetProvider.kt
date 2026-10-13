@@ -5,7 +5,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 
-class SolarWidgetProvider : AppWidgetProvider() {
+open class SolarWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         SolarWidget.updateAll(context)
@@ -16,7 +16,9 @@ class SolarWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onDisabled(context: Context) {
-        SolarWidget.cancelAlarms(context)
+        if (!SolarWidget.hasAnyWidgets(context)) {
+            SolarWidget.cancelAlarms(context)
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -26,3 +28,7 @@ class SolarWidgetProvider : AppWidgetProvider() {
         }
     }
 }
+
+class VivoSolarWidgetProvider : SolarWidgetProvider()
+
+class XiaomiSolarWidgetProvider : SolarWidgetProvider()

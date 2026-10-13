@@ -30,8 +30,30 @@ object SolarWidget {
 
     private const val HOUR_MS = 3_600_000L
 
+    private val providerLayouts = listOf(
+        SolarWidgetProvider::class.java to R.layout.widget_solar_time,
+        VivoSolarWidgetProvider::class.java to R.layout.widget_solar_time,
+        XiaomiSolarWidgetProvider::class.java to R.layout.widget_solar_time_xiaomi
+    )
+
+    fun hasAnyWidgets(context: Context): Boolean {
+        val manager = AppWidgetManager.getInstance(context)
+        return providerLayouts.any { (provider, _) ->
+            manager.getAppWidgetIds(ComponentName(context, provider)).isNotEmpty()
+        }
+    }
+
     fun updateAll(context: Context) {
         val app = context.applicationContext
+        val widgetManager = AppWidgetManager.getInstance(app)
+        val active = providerLayouts.mapNotNull { (provider, layout) ->
+            val ids = widgetManager.getAppWidgetIds(ComponentName(app, provider))
+            if (ids.isEmpty()) null else ids to layout
+        }
+        if (active.isEmpty()) {
+            cancelAlarms(app)
+            return
+        }
         val alarmManager = app.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val exact = canScheduleExact(alarmManager)
 
@@ -41,52 +63,55 @@ object SolarWidget {
         val longitude = saved?.longitude ?: SolarTime.zoneMeridianDegrees(zoneOffset)
         val snap = SolarTime.snapshot(now, longitude, zoneOffset)
 
-        val rv = RemoteViews(app.packageName, R.layout.widget_solar_time)
         val base = SystemClock.elapsedRealtime() - snap.apparentSolarMillisOfDay
         // 有精确闹钟时每个整点都会重锚，可以把 0 点后一小时显示成 0:MM:SS 保持 HH:MM:SS 观感；
         // 没有精确闹钟时不设格式，Chronometer 在 0~1 点显示为 M:SS（数值仍正确）
         val format = if (exact && snap.apparentSolarMillisOfDay < HOUR_MS) "0:%s" else null
-        rv.setChronometer(R.id.chrono, base, format, true)
-        rv.setTextViewText(R.id.tvOffset, offsetLine(snap))
-        rv.setTextViewText(R.id.tvDetail, detailLine(snap, saved))
-        AppWidgetManager.getInstance(app).updateAppWidget(componentName(app), rv)
+        for ((ids, layout) in active) {
+            val rv = RemoteViews(app.packageName, layout)
+            rv.setChronometer(R.id.chrono, base, format, true)
+            rv.setTextViewText(R.id.tvShichen, SolarTime.shichenLabel(snap.apparentSolarMillisOfDay))
+            rv.setTextViewText(R.id.tvOffset, offsetLine(snap))
+            rv.setTextViewText(R.id.tvDetail, detailLine(snap, saved))
+            widgetManager.updateAppWidget(ids, rv)
+        }
 
         scheduleAlarms(app, snap, exact)
     }
-
-    fun componentName(context: Context): ComponentName =
-        ComponentName(context, SolarWidgetProvider::class.java)
 
     fun cancelAlarms(context: Context) {
         val app = context.applicationContext
         val alarmManager = app.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.cancel(rebasePendingIntent(app))
+        alarmManager.cancel(rebasePendingIntent(app, 1))
     }
 
     fun canScheduleExact(alarmManager: AlarmManager): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
 
     private fun scheduleAlarms(context: Context, snap: SolarTime.Snapshot, exact: Boolean) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pi = rebasePendingIntent(context)
+        val fallbackPi = rebasePendingIntent(context, 1)
         alarmManager.cancel(pi)
+        alarmManager.cancel(fallbackPi)
+        val delay = HOUR_MS - snap.apparentSolarMillisOfDay % HOUR_MS
         if (exact) {
             // 精确路径：链式单发，对齐下一个真太阳整点（顺带覆盖真太阳午夜翻日）
-            val delay = HOUR_MS - snap.apparentSolarMillisOfDay % HOUR_MS
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC, System.currentTimeMillis() + delay + 50, pi
             )
         }
-        // 兜底路径（含精确闹钟被系统/OEM 推迟的情形）：每小时不精确重锚一次
+        // 独立 PendingIntent，避免备用闹钟覆盖精确闹钟；同样对齐真太阳整点。
         alarmManager.setInexactRepeating(
-            AlarmManager.RTC, System.currentTimeMillis() + HOUR_MS, HOUR_MS, pi
+            AlarmManager.RTC, System.currentTimeMillis() + delay + 1_000, HOUR_MS, fallbackPi
         )
     }
 
-    private fun rebasePendingIntent(context: Context): PendingIntent {
+    private fun rebasePendingIntent(context: Context, requestCode: Int = 0): PendingIntent {
         val intent = Intent(context, SolarWidgetProvider::class.java).setAction(ACTION_REBASE)
         return PendingIntent.getBroadcast(
-            context, 0, intent,
+            context, requestCode, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
