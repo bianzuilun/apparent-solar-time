@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Chronometer emits M:SS, MM:SS or H:MM:SS. A fixed-width zero template behind
+    the right-aligned, opaque counter fills only its missing leading characters.
+    Both views use identical monospace metrics. Native ticks can grow the counter
+    across 01:00 without a RemoteViews update or a time-dependent format prefix.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetClockFrame"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layoutDirection="ltr">
+
+    <TextView
+        android:id="@+id/clockZeroPad"
+        style="@style/WidgetClockText"
+        android:importantForAccessibility="no"
+        android:text="@string/widget_clock_template" />
+
+    <Chronometer
+        android:id="@+id/chrono"
+        style="@style/WidgetClockText"
+        android:layout_gravity="end" />
+</FrameLayout>

@@ -15,13 +15,15 @@ val keystoreProps = Properties().apply {
 android {
     namespace = "com.apparentsolar.time"
     compileSdk = 36
+    testBuildType = "release"
 
     defaultConfig {
         applicationId = "com.apparentsolar.time"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 6
+        versionName = "1.0.5"
+        testInstrumentationRunner = "com.apparentsolar.time.WidgetClockInstrumentation"
     }
 
     if (keystoreProps.isNotEmpty()) {

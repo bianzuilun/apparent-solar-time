@@ -22,13 +22,12 @@ import kotlin.math.abs
  *
  * 锚点漂移来源是真太阳日长度的缓变（均时差一天最多变化约 20 秒），
  * 因此每个真太阳整点用闹钟重锚一次即可把误差控制在 1 秒内。
- * 非唤醒闹钟：息屏时不触发（此时没人看表），亮屏后补发。
+ * 整点使用允许空闲期间执行的唤醒闹钟，避免睡眠跨日后计时器累计到 24 小时以上。
+ * 系统周期更新和点击组件提供独立恢复入口，不依赖 App 常驻。
  */
 object SolarWidget {
 
     const val ACTION_REBASE = "com.apparentsolar.time.action.REBASE"
-
-    private const val HOUR_MS = 3_600_000L
 
     private val providerLayouts = listOf(
         SolarWidgetProvider::class.java to R.layout.widget_solar_time,
@@ -54,29 +53,24 @@ object SolarWidget {
             cancelAlarms(app)
             return
         }
-        val alarmManager = app.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val exact = canScheduleExact(alarmManager)
-
         val now = System.currentTimeMillis()
         val zoneOffset = TimeZone.getDefault().getOffset(now) / 1000
         val saved = LocationStore.load(app)
         val longitude = saved?.longitude ?: SolarTime.zoneMeridianDegrees(zoneOffset)
         val snap = SolarTime.snapshot(now, longitude, zoneOffset)
+        scheduleAlarms(app, now, longitude)
 
         val base = SystemClock.elapsedRealtime() - snap.apparentSolarMillisOfDay
-        // 有精确闹钟时每个整点都会重锚，可以把 0 点后一小时显示成 0:MM:SS 保持 HH:MM:SS 观感；
-        // 没有精确闹钟时不设格式，Chronometer 在 0~1 点显示为 M:SS（数值仍正确）
-        val format = if (exact && snap.apparentSolarMillisOfDay < HOUR_MS) "0:%s" else null
         for ((ids, layout) in active) {
             val rv = RemoteViews(app.packageName, layout)
-            rv.setChronometer(R.id.chrono, base, format, true)
+            // 补零由共享时钟布局负责，权限和整点更新延迟都不会改变显示格式。
+            rv.setChronometer(R.id.chrono, base, null, true)
             rv.setTextViewText(R.id.tvShichen, SolarTime.shichenLabel(snap.apparentSolarMillisOfDay))
             rv.setTextViewText(R.id.tvOffset, offsetLine(snap))
             rv.setTextViewText(R.id.tvDetail, detailLine(snap, saved))
+            rv.setOnClickPendingIntent(android.R.id.background, rebasePendingIntent(app, 2))
             widgetManager.updateAppWidget(ids, rv)
         }
-
-        scheduleAlarms(app, snap, exact)
     }
 
     fun cancelAlarms(context: Context) {
@@ -89,23 +83,21 @@ object SolarWidget {
     fun canScheduleExact(alarmManager: AlarmManager): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
 
-    private fun scheduleAlarms(context: Context, snap: SolarTime.Snapshot, exact: Boolean) {
+    private fun scheduleAlarms(context: Context, now: Long, longitude: Double) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pi = rebasePendingIntent(context)
-        val fallbackPi = rebasePendingIntent(context, 1)
-        alarmManager.cancel(pi)
-        alarmManager.cancel(fallbackPi)
-        val delay = HOUR_MS - snap.apparentSolarMillisOfDay % HOUR_MS
-        if (exact) {
-            // 精确路径：链式单发，对齐下一个真太阳整点（顺带覆盖真太阳午夜翻日）
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC, System.currentTimeMillis() + delay + 50, pi
-            )
+        // 移除旧版不唤醒设备的重复闹钟；新的同一 PendingIntent 会替换上次单发闹钟。
+        alarmManager.cancel(rebasePendingIntent(context, 1))
+        val trigger = SolarTime.nextSolarHourUtcMillis(now, longitude) + 250L
+        if (canScheduleExact(alarmManager)) {
+            try {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi)
+                return
+            } catch (_: SecurityException) {
+                // 授权检查与安排闹钟之间权限可能被撤销，继续安排无需特殊权限的兜底。
+            }
         }
-        // 独立 PendingIntent，避免备用闹钟覆盖精确闹钟；同样对齐真太阳整点。
-        alarmManager.setInexactRepeating(
-            AlarmManager.RTC, System.currentTimeMillis() + delay + 1_000, HOUR_MS, fallbackPi
-        )
+        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi)
     }
 
     private fun rebasePendingIntent(context: Context, requestCode: Int = 0): PendingIntent {

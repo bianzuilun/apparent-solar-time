@@ -2,6 +2,7 @@ package com.apparentsolar.solar
 
 import kotlin.math.PI
 import kotlin.math.atan2
+import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
@@ -37,6 +38,19 @@ object SolarTime {
         val hour = normalized / 3_600_000L
         val branch = ((hour + 1) / 2 % 12).toInt()
         return "子丑寅卯辰巳午未申酉戌亥"[branch] + "时"
+    }
+
+    /** 下一个真太阳整点的 UTC 时刻，包含等待期间均时差的变化，向上取整到毫秒。 */
+    fun nextSolarHourUtcMillis(utcMillis: Long, longitudeDegrees: Double): Long {
+        val hourMillis = 3_600_000.0
+        val longitudeMillis = longitudeDegrees * MILLIS_PER_DEGREE
+        val apparentNow = utcMillis + longitudeMillis + equationOfTimeSeconds(julianDay(utcMillis)) * 1000.0
+        val target = (floor(apparentNow / hourMillis) + 1) * hourMillis
+        var candidate = utcMillis + target - apparentNow
+        repeat(3) {
+            candidate = target - longitudeMillis - equationOfTimeSeconds(julianDay(candidate.toLong())) * 1000.0
+        }
+        return ceil(candidate).toLong()
     }
 
     /**

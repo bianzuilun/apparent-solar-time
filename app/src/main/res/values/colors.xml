@@ -6,4 +6,5 @@
     <color name="textPrimary">#F2F2F5</color>
     <color name="textDim">#9A9AA3</color>
     <color name="iconBg">#101018</color>
+    <color name="widgetClockSurface">#16161C</color>
 </resources>

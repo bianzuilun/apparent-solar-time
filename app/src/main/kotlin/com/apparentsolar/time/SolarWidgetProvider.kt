@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 
 open class SolarWidgetProvider : AppWidgetProvider() {
 
@@ -12,6 +13,12 @@ open class SolarWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
+        SolarWidget.updateAll(context)
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle
+    ) {
         SolarWidget.updateAll(context)
     }
 
