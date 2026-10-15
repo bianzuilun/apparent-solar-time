@@ -5,8 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-// 签名信息来自根目录 keystore.properties（私有仓库随库保存，保证各机器构建签名一致；
-// 若仓库转公开，请移出该文件与 keystore/ 并更换签名）
+// 可选的本地签名配置。正式签名密钥不进入版本控制；未配置时仍可构建未签名的 release APK。
 val keystoreProps = Properties().apply {
     val f = rootProject.file("keystore.properties")
     if (f.exists()) f.inputStream().use { load(it) }

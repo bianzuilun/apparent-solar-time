@@ -63,10 +63,10 @@ app/                   Android 应用
 ```bash
 ./gradlew :core-solar:test        # 核心算法测试
 ./gradlew :app:assembleDebug      # 调试 APK
-./gradlew :app:assembleRelease    # 正式签名 APK（读取根目录 keystore.properties）
+./gradlew :app:assembleRelease    # Release APK；本地配置签名后输出正式签名包
 ```
 
-签名密钥 `keystore/solar-release.jks` 与 `keystore.properties` 随私有仓库保存，保证任何机器构建出的 APK 签名一致、可覆盖安装。**若将来开源，请先把它们移出仓库并更换签名。**
+正式签名密钥不在仓库中。需要签名时，复制 `keystore.properties.example` 为 `keystore.properties`，填写本机密钥路径及密码；该配置和 `keystore/` 目录已被 Git 忽略。不要提交自己的签名密钥。GitHub Releases 中的官方 APK 继续使用项目原有正式签名，可覆盖安装此前的正式版本。
 
 ## 安装
 
@@ -99,3 +99,7 @@ app/                   Android 应用
 
 - 均时差基于 UTC 计算，与 UT1（地球真实自转）差异 < 1 秒，未做 DUT1 修正
 - 定位仅在打开 App 或手动操作时更新；真太阳时对经度极不敏感（10 米 ≈ 0.002 秒），无需后台定位
+
+## 许可证
+
+本项目使用 [MIT License](LICENSE)。
