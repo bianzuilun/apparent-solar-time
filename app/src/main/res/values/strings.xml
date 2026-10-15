@@ -7,6 +7,11 @@
     <string name="widget_desc">实时显示当地真太阳时，按秒刷新</string>
     <string name="widget_refresh_description">真太阳时，点击校准小组件</string>
     <string name="widget_clock_template" translatable="false">00:00:00</string>
+    <string name="background_refresh_button">vivo 后台刷新设置（保证时辰自动切换）</string>
+    <string name="background_refresh_title">允许 vivo 后台刷新</string>
+    <string name="background_refresh_message">vivo 会在“智能控制后台耗电”下冻结小组件的到点刷新。请允许「真太阳时」自启动，并在后台耗电管理中选择“允许后台耗电”。</string>
+    <string name="background_refresh_open">打开自启动设置</string>
+    <string name="background_battery_open">允许后台耗电</string>
     <string name="about_title">关于 · 真太阳时</string>
     <string name="about_button">关于</string>
     <string name="about_github" translatable="false">https://github.com/bianzuilun</string>

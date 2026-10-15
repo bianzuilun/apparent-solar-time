@@ -117,7 +117,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="授予「精确闹钟」权限（保证整点与午夜精准校准）"
+            android:text="授予「精确闹钟」权限（避免时辰切换延迟）"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnBackground"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/background_refresh_button"
             android:visibility="gone" />
 
         <TextView

@@ -85,23 +85,35 @@ object SolarWidget {
 
     private fun scheduleAlarms(context: Context, now: Long, longitude: Double) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val pi = rebasePendingIntent(context)
-        // 移除旧版不唤醒设备的重复闹钟；新的同一 PendingIntent 会替换上次单发闹钟。
-        alarmManager.cancel(rebasePendingIntent(context, 1))
+        val exactPi = rebasePendingIntent(context)
+        val fallbackPi = rebasePendingIntent(context, 1)
         val trigger = SolarTime.nextSolarHourUtcMillis(now, longitude) + 250L
+
+        // 始终保留一条无需特殊权限的唤醒闹钟。Android 在用户撤销精确闹钟权限时
+        // 会取消现有精确闹钟并终止应用，届时代码没有机会现场降级；独立备用闹钟
+        // 不会随精确闹钟一起消失，可在下个整点重新校准时间和时辰。
+        alarmManager.cancel(fallbackPi)
+        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, fallbackPi)
+
+        // 清掉上一轮精确闹钟。若仍有权限，再增加一条准点触发的主闹钟；主闹钟
+        // 触发 updateAll 后会把尚未触发的备用闹钟一起推进到下一个整点。
+        alarmManager.cancel(exactPi)
         if (canScheduleExact(alarmManager)) {
             try {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi)
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, exactPi)
                 return
             } catch (_: SecurityException) {
-                // 授权检查与安排闹钟之间权限可能被撤销，继续安排无需特殊权限的兜底。
+                // 授权检查与安排之间权限可能被撤销；上面的备用闹钟仍然有效。
             }
         }
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi)
     }
 
     private fun rebasePendingIntent(context: Context, requestCode: Int = 0): PendingIntent {
-        val intent = Intent(context, SolarWidgetProvider::class.java).setAction(ACTION_REBASE)
+        val intent = Intent(context, SolarWidgetProvider::class.java)
+            .setAction(ACTION_REBASE)
+            // 这是很短的组件文字刷新。前台广播标记可减少厂商系统把到点广播
+            // 当作普通后台自启动而冻结的概率，不会启动界面或常驻服务。
+            .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
         return PendingIntent.getBroadcast(
             context, requestCode, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

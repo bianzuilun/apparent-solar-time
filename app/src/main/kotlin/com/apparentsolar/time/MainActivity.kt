@@ -39,6 +39,7 @@ class MainActivity : Activity() {
     private lateinit var tvZone: TextView
     private lateinit var tvLoc: TextView
     private lateinit var btnExact: Button
+    private lateinit var btnBackground: Button
 
     private val ticker = object : Runnable {
         override fun run() {
@@ -71,6 +72,7 @@ class MainActivity : Activity() {
         tvZone = findViewById(R.id.tvZone)
         tvLoc = findViewById(R.id.tvLoc)
         btnExact = findViewById(R.id.btnExact)
+        btnBackground = findViewById(R.id.btnBackground)
 
         findViewById<Button>(R.id.btnLocate).setOnClickListener { ensurePermissionThenLocate() }
         findViewById<Button>(R.id.btnManual).setOnClickListener { showManualDialog() }
@@ -82,6 +84,40 @@ class MainActivity : Activity() {
                     Uri.parse("package:$packageName")
                 )
             )
+        }
+        val vivoSettings = vivoBackgroundSettingsIntent()
+        btnBackground.visibility =
+            if (vivoSettings.resolveActivity(packageManager) != null) View.VISIBLE else View.GONE
+        btnBackground.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.background_refresh_title)
+                .setMessage(R.string.background_refresh_message)
+                .setPositiveButton(R.string.background_refresh_open) { _, _ ->
+                    try {
+                        startActivity(vivoBackgroundSettingsIntent())
+                    } catch (_: Exception) {
+                        startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:$packageName")
+                            )
+                        )
+                    }
+                }
+                .setNeutralButton(R.string.background_battery_open) { _, _ ->
+                    try {
+                        startActivity(vivoBatterySettingsIntent())
+                    } catch (_: Exception) {
+                        startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:$packageName")
+                            )
+                        )
+                    }
+                }
+                .setNegativeButton(R.string.about_close, null)
+                .show()
         }
     }
 
@@ -245,7 +281,15 @@ class MainActivity : Activity() {
         return String.format(Locale.US, "%02d:%02d:%02d", t / 3600, t % 3600 / 60, t % 60)
     }
 
+    private fun vivoBackgroundSettingsIntent(): Intent =
+        Intent(VIVO_BACKGROUND_SETTINGS_ACTION).addCategory(Intent.CATEGORY_DEFAULT)
+
+    private fun vivoBatterySettingsIntent(): Intent =
+        Intent(VIVO_BATTERY_SETTINGS_ACTION).addCategory(Intent.CATEGORY_DEFAULT)
+
     private companion object {
         const val REQUEST_LOCATION = 1
+        const val VIVO_BACKGROUND_SETTINGS_ACTION = "com.iqoo.secure.BGSTARTUPMANAGER"
+        const val VIVO_BATTERY_SETTINGS_ACTION = "com.iqoo.powersaving.battery.high.power.jump"
     }
 }
